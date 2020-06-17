@@ -1,80 +1,693 @@
 FORMAT: 1A
-HOST: https://polls.apiblueprint.org/
+HOST: https://hft-api-dev.lykkex.net
 
-# LykkeAPI
+# Lykke trading API
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+Lykke trading api.
 
-## Questions Collection [/questions]
+# API usage
 
-### List All Questions [GET]
+## Allowed HTTP Verbs
+- `PUT` : Updates a resource 
+- `POST` : Creates a resource
+- `GET` : Gets a resource or list of resources
+- `DELETE` : Deletes a resource
+
+## Description Of Usual Server Responses
+- 200 `OK` : the request was successful.
+- 401 `Unauthorized` : authentication failed.
+- 404 `Not Found` : endpoint was not found.
+- 500 `Internal Server Error` : server error.
+
+## Response structure
+
+Every response contains two fields - ```payload``` and ```error```. Successful response will contain response data in the ```payload``` 
+field and *null* in ```error``` field and vise versa for the error response.
+
+### Successful response
+
+```
+    {
+        "payload": {
+            "orderId": "a0e83da9-4a69-4ce4-9a42-6443ed1b45c0"
+        },
+        "error": null
+    }
+```
+
+### Eror response
+
+```
+{
+    "error": {
+        "code": 1100,
+        "message": "Asset not found",
+        "fields": {
+            "assetId": "Asset not found"
+        }
+    },
+    "payload": null
+}
+```
+
+## Error codes
+
+`0` : Success
+
+### General network errors (10xx)
+`1001` : RuntimeError (Internal Server Error)
+
+### Validation errors(11xx)
+`1100` : ItemNotFound - resource not found (i.e. asset not found by privided ID)
+
+`1101` : InvalidField - invalid field in the request (i.e. Price must be > 0)
+
+### Logic errors(2xxx)
+
+**//TODO**: change/add description
+
+- `2000` : MeBadRequest
+- `2001` : MeLowBalance
+- `2202` : MeAlreadyProcessed
+- `2003` : MeDisabledAsset
+- `2004` : MeUnknownAsset
+- `2005` : MeNoLiquidity
+- `2006` : MeNotEnoughFunds
+- `2007` : MeDust
+- `2008` : MeReservedVolumeHigherThanBalance
+- `2009` : MeNotFound
+- `2010` : MeBalanceLowerThanReserved
+- `2011` : MeLeadToNegativeSpread
+- `2012` : MeTooSmallVolume
+- `2013` : MeInvalidFee
+- `2014` : MeInvalidPrice
+- `2015` : MeReplaced
+- `2016` : MeNotFoundPrevious
+- `2017` : MeDuplicate
+- `2018` : MeInvalidVolumeAccuracy
+- `2019` : MeInvalidPriceAccuracy
+- `2020` : MeInvalidVolume
+- `2021` : MeTooHighPriceDeviation
+- `2022` : MeInvalidOrderValue
+- `2023` : MeRuntime
+
+## Authorization
+
+You can create API keys on this page https://wallet.lykke.com/wallets/hft
+
+
+## Data structures
+
+### PriceVolume (object)
+Price and volume for the level in the orderbook
++ `p` - price
++ `v` - volume
+
+### Side (enum)
+Order side
++ buy
++ sell
+
+### Fee (object)
++ assetId (string) - asset ID for the fee
++ size (number) - fee size
+
+### Trade (object)
++ id (string) - Trade ID.
++ orderId (string) - Order ID of this trade.
++ assetPairId (string) - Trade asset pair ID.
++ index (number) - Index of trade for this order.
++ timestamp (string) - Date time of the trade.
++ role (string) - Trade role. `Maker` or `Taker`
++ price (number) - Trade price.
++ baseVolume (number) - Trade volume in base asset.
++ quoteVolume (number) - Trade volume in quote asset.
++ baseAssetId (string) - Base asset ID.
++ quoteAssetId (string) - Quote asset ID.
++ fee (Fee) - trade Fee
+
+
+## Group Public APIs
+
+## Asset [/api/assets]
+
+API to get assets information
+
+---
++ Attributes
+    + assetId: `08750191-e464-4b00-8169-12415d5406ca` (string) - Asset unique identifier.
+    + name: `Erc20 token AMLT (0xca0e7269600d353f70b14ad118a49575455c0f2f)` (string) - Asset name.
+    + symbol: `AMLT` (string) - Asset symbol.
+    + accuracy: 6 (number) - Maximum number of digits after the decimal point which are supported by the asset.
+
+
+### /api/assets [GET]
+
+Get all assets
 
 + Response 200 (application/json)
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
+        {
+            "payload": [
+                {
+                    "assetId": "AUD",
+                    "blockchainId": "AUD",
+                    "name": "AUD",
+                    "displayName": "AUD",
+                    "accuracy": 2
+                },
+                {
+                    "assetId": "BTC",
+                    "blockchainId": "BTC",
+                    "name": "BTC",
+                    "displayName": "BTC",
+                    "accuracy": 8
+                },
+                ...
+            ],
+            "error": null
+        }
+
+### /api/assets/{assetId} [GET/api/assets/{assetId}]
+
+Get a asset by ID
+
++ Parameters
+    + assetId (string) - Asset qniquie ID
+
++ Response 200 (application/json)
+
+        {
+            "payload": {
+                "assetId": "AUD",
+                "blockchainId": "AUD",
+                "name": "AUD",
+                "displayName": "AUD",
+                "accuracy": 2
+            },
+            "error": null
+        }
+        
++ Response 200 (application/json)
+
+        {
+          "Error": {
+            "Code": 1100,
+            "Message": "Asset not found",
+            "Fields": {
+              "assetId": "Asset not found"
             }
-        ]
+          }
+        }
 
-### Create a New Question [POST]
+## AssetPair [/api/assetpairs]
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
+API to get asset pairs information
+
+---
++ Attributes
+    + assetPairId: `BTCUSD` (string) - Asset pair unique identifier.
+    + baseAssetId: BTC (string) - Base asset ID in asset pair.
+    + quoteAssetId: USD (string) - Quote asset ID in asset pair.
+    + name: `BTC/USD` (string) - Asset pair name.
+    + priceAccuracy: `3` (number) - Accuracy for the price for asset pair.
+    + baseAssetAccuracy: `8` (number) - Accuracy of the base asset in the asset pair.
+    + quoteAssetAccuracy: `3` (number) - Accuracy for the quote asset in the asset pair.
+    + minVolume: 0.0001 (number) - Minimal volume for order.
+    + minOppositeVolume: 6 (number) - Minimal volume in quote asset for order.
+
+
+### /api/assetpairs [GET]
+
+Get all asset pairs
+
++ Response 200 (application/json)
+
+        {
+            "payload": [
+                {
+                    "assetPairId": "BTCUSD",
+                    "baseAssetId": "BTC",
+                    "quoteAssetId": "USD",
+                    "name": "BTC/USD",
+                    "priceAccuracy": 3,
+                    "baseAssetAccuracy": 8,
+                    "quoteAssetAccuracy": 2,
+                    "minVolume": 0.0001,
+                    "minOppositeVolume": 1
+                },
+                {
+                    "assetPairId": "BTCCHF",
+                    "baseAssetId": "BTC",
+                    "quoteAssetId": "CHF",
+                    "name": "BTC/CHF",
+                    "priceAccuracy": 3,
+                    "baseAssetAccuracy": 8,
+                    "quoteAssetAccuracy": 2,
+                    "minVolume": 0.0001,
+                    "minOppositeVolume": 1
+                },
+                ...
+            ],
+            "error": null
+        }
+
+### /api/assetpairs/{assetPairId} [GET/api/assetpairs/{assetPairId}]
+
+Get a asset pair by ID
+
++ Parameters
+    + assetPairId (string) - Asset pair qniquie ID
+
++ Response 200 (application/json)
+
+        {
+            "payload": {
+                "assetPairId": "BTCUSD",
+                "baseAssetId": "BTC",
+                "quoteAssetId": "USD",
+                "name": "BTC/USD",
+                "priceAccuracy": 3,
+                "baseAssetAccuracy": 8,
+                "quoteAssetAccuracy": 2,
+                "minVolume": 0.0001,
+                "minOppositeVolume": 1
+            },
+            "error": null
+        }
+        
+## OrderBook [/api/orderbooks]
+
+API to get orderbook
+
+---
++ Attributes
+    + assetPairId: `BTCUSD` (string) - Orderbook asset pair ID.
+    + timestamp: `2020-05-02T11:59:36.204Z` (string) - Update date time.
+    + bids (array[PriceVolume]) - Buy prices.
+    + asks (array[PriceVolume]) - Sell prices.
+
+
+### /api/orderbooks [GET/api/orderbooks{?assetPairId,depth}]
+
+Get orderbooks
+
++ Parameters
+    + assetPairId (string, optional) - orderbook asset pair
+    + depth (number, optional) - depth of orderbook
+
++ Response 200 (application/json)
+
+        {
+            "payload": [
+                {
+                    "assetPairId": "BTCUSD",
+                    "timestamp": "2020-05-02T11:59:36.204Z",
+                    "bids": [
+                        {
+                        "v": 1.55076736,
+                        "p": 8829.333
+                        }
+                    ],
+                    "asks": [
+                        {
+                        "v": 0.64618375,
+                        "p": 8891.311
+                        }
+                    ]
+                },
+                ...
+            ],
+            "error": null
+        }
+
+
+## Ticker [/api/tickers]
+
+API to get price tickers - statistics for a particular market/symbol for the last 24 hours.
+
+---
++ Attributes
+    + assetPairId: `BTCUSD` (string) - Ticker asset pair.
+    + volumeBase: `2.23607599` (number) - Total volume in base asset for the last 24 hours.
+    + volumeQuote: `20194.01` (number) - Total volume in quote asset for the last 24 hours.
+    + priceChange: `0.02377964434649492` (number) - Price change for the last 24 hours.
+    + lastPrice: `9046.421` (number) - Last trade price.
+    + bid: `8980.324` (number) - Current buy price.
+    + ask: `9031.45` (number) - Current sell price.
+    + high: `9150` (number) - The highest price for the last 24 hours.
+    + low: `8836.297` (number) - The lowest price for the last 24 hours.
+
+
+### /api/tickers [GET/api/tickers{?assetPairIds}]
+
+Get price tickers
+
++ Parameters
+    + assetPairIds (array[string], optional) - list of asset pairs
+
++ Response 200 (application/json)
+
+        {
+            "payload": [
+                {
+                    "assetPairId": "BTCUSD",
+                    "volumeBase": "2.23607599",
+                    "volumeQuote": "20194.01",
+                    "priceChange": "0.02377964434649492",
+                    "lastPrice": "9046.421",
+                    "bid": "8980.324",
+                    "ask": "9031.45",
+                    "high": "9150",
+                    "low": "8836.297"
+            ],
+            ...
+            "error": null
+        }
+
+## Group Private APIs
+
+## Limit Order [/api/orders/limit]
+
+Place limit order
+
+### /api/orders/limit [POST]
+
++ Body
+    + assetPairId: (string) - Asset pair ID to make limit order.
+    + side: (Side) - The limit order type: `sell`, `buy`.
+    + price: (decimal) - Price of the limit order.
+    + volume: (decimal) - Volume in base asset for the limmit order.
 
 + Request (application/json)
 
-        {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
-        }
-
-+ Response 201 (application/json)
-
     + Headers
 
-            Location: /questions/2
+            Authorization: Bearer <put your api key>
+    
+    + Body
+    
+            {
+                "assetPairId": "BTCUSD",
+                "side": "sell",
+                "volume": 0.001,
+                "price": 8000
+            }
+
++ Response 200 (application/json)
 
     + Body
 
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
+                "orderId": "00212c6e-2a5c-4d34-a058-9a46b4279285"
             }
+
+
+## Market Order [/api/orders/market]
+
+Place market order
+
+### /api/orders/market[POST]
+
++ Body
+    + assetPairId: (string) - Asset pair ID to make market order.
+    + side: (Side) - The market order type: `sell`, `buy`.
+    + volume: (decimal) - Volume in base asset for the market order.
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer <put your api key>
+    
+    + Body
+    
+            {
+                "assetPairId": "BTCUSD",
+                "side": "sell",
+                "volume": 0.001
+            }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "orderId": "00212c6e-2a5c-4d34-a058-9a46b4279285",
+                "price": 8000
+            }
+
+
+## Order [/api/orders]
+
+API to get active/closed orders.
+
+---
++ Attributes
+    + id: `00212c6e-2a5c-4d34-a058-9a46b4279285` (string) - Order ID.
+    + assetPairId: `BTCUSD` (string) - Order asset pair ID.
+    + timestamp: `2020-05-04T06:45:20.999Z` (string) - Date time when the order was placed.
+    + lastTradeTimestamp: `2020-05-04T06:45:20.999Z` (string) - Last trade date time for this order.
+    + status: `PartiallyMatched` (string) - Order status.
+    + type: `Limit` (string) - Order type.
+    + side: `Buy` (string) - Order direction.
+    + price: `9031.45` (number) - Price in quote asset.
+    + volume: `0.45` (number) - Ordered volume in base asset.
+    + filledVolume: `0.40` (number) - Filled volume in base asset.
+    + remainingVolume: `0.05` (number) - Remaining volume to fill.
+    + cost: `3612.58` (number) - Order cost. `filledVolume` * `price`
+    + trades (array[Trade]) - List of order trades.
+
+
+### /api/orders/active [GET/api/orders/active{?assetPairId,withTrades,offset,take}]
+
+Get active orders
+
++ Parameters
+    + assetPairId (string, optional) - asset pair ID
+    + offset (number) - how many orders to skip, ordes sorted by date
+    + take (number) - amount of orders to return, maximum 500
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer <put your api key>
+
++ Response 200 (application/json)
+
+        {
+            "payload": [
+                {
+                    "id": "57ccfcf0-7d86-47bc-aa76-2717751649d9",
+                    "timestamp": "2020-04-28T13:39:15.595Z",
+                    "lastTradeTimestamp": "2020-04-28T13:42:00.616Z",
+                    "status": "PartiallyMatched",
+                    "assetPairId": "BTCUSD",
+                    "type": "Limit",
+                    "side": "Buy",
+                    "price": 15000,
+                    "volume": 0.1,
+                    "filledVolume": 0.005,
+                    "remainingVolume": 0.095,
+                    "cost": 75
+                },
+                ...
+            ],
+            "error": null
+        }
+
+
+### /api/orders/closed [GET/api/orders/closed{?assetPairId,withTrades,offset,take}]
+
+Get closed orders
+
++ Parameters
+    + assetPairId (string, optional) - asset pair ID
+    + offset (number) - how many orders to skip, ordes sorted by date
+    + take (number) - amount of orders to return, maximum 500
+    
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer <put your api key>
+
++ Response 200 (application/json)
+
+        {
+            "payload": [
+                {
+                    "id": "c7cf8463-6e5b-492a-aac5-20f7d50b2038",
+                    "timestamp": "2020-04-29T09:28:43.237Z",
+                    "lastTradeTimestamp": "2020-04-29T09:28:43.454Z",
+                    "status": "Matched",
+                    "assetPairId": "BTCUSD",
+                    "type": "Market",
+                    "side": "Sell",
+                    "price": 9000,
+                    "volume": 0.005,
+                    "filledVolume": 0.005,
+                    "remainingVolume": 0,
+                    "cost": 45
+                },
+                ...
+            ],
+            "error": null
+        }
+    
+
+### /api/orders/{orderId} [DELETE /api/orders/{orderId}]
+
+Delete order by ID.
+
++ Parameters
+    + orderId (string) - Order ID.
+    
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer <put your api key>
+
++ Response 204 (application/json)
+
+### /api/orders [DELETE /api/orders/{?assetPairId,side}]
+
+Delete orders.
+
++ Parameters
+    + assetPairId (string) - Orders asset pair ID.
+    + side (string) - Order side. `buy` or `sell`
+    
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer <put your api key>
+
++ Response 204 (application/json)
+
+
+## Trades [/api/trades]
+
+API to get trades.
+
+---
++ Attributes (Trade)
+
+
+### /api/trades/order/{orderId} [GET/api/trades/order/{orderId}]
+
+Get order trades
+
++ Parameters
+    + orderId (string) - order ID
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer <put your api key>
+
++ Response 200 (application/json)
+
+        {
+            "payload": [
+                {
+                    "id": "2b18b8b7-1b11-4dd0-bc62-6af70d74634a",
+                    "index": 0,
+                    "timestamp": "2020-04-28T13:42:00.616Z",
+                    "assetPairId": "BTCUSD",
+                    "orderId": "57ccfcf0-7d86-47bc-aa76-2717751649d9",
+                    "role": "Maker",
+                    "price": 15000,
+                    "baseVolume": 0.005,
+                    "quoteVolume": 75,
+                    "baseAssetId": "BTC",
+                    "quoteAssetId": "USD",
+                    "fee": null
+                },
+                ...
+            ],
+            "error": null
+        }
+
+
+### /api/trades [GET/api/trades{?assetPairId,side,offset,take,from,to}]
+
+Get trades
+
++ Parameters
+    + assetPairId (string, optional) - trade asset pair ID
+    + side (Side) - trade side
+    + offset (number) - how many trades to skip, trades sorted by date
+    + take (number) - amount of trades to return, maximum 500
+    + from (string) - start date
+    + to (string) - end date
+    
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer <put your api key>
+
++ Response 200 (application/json)
+
+        {
+            "payload": [
+                {
+                    "id": "2b18b8b7-1b11-4dd0-bc62-6af70d74634a",
+                    "index": 0,
+                    "timestamp": "2020-04-28T13:42:00.616Z",
+                    "assetPairId": "BTCUSD",
+                    "orderId": "57ccfcf0-7d86-47bc-aa76-2717751649d9",
+                    "role": "Maker",
+                    "price": 15000,
+                    "baseVolume": 0.005,
+                    "quoteVolume": 75,
+                    "baseAssetId": "BTC",
+                    "quoteAssetId": "USD",
+                    "fee": null
+                },
+                ...
+            ],
+            "error": null
+        }
+
+
+## Balance [/api/balance]
+
+API to get current balances.
+
+---
++ Attributes
+    + assetId: `BTC` (string) - Asset ID.
+    + available: `1.045` (number) - Available amount.
+    + reserved: `0` (number) - Reserved amount (for example in open orders).
+    + timestamp: `2020-05-04T06:45:20.999Z` (string) - Last balace update date time.
+
+### /api/balanace [GET/api/balance]
+
+Get current balances
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer <put your api key>
+
++ Response 200 (application/json)
+
+        {
+            "payload": [
+                {
+                    "assetId": "BTC",
+                    "available": 1.045,
+                    "reserved": 0,
+                    "timestamp": "2020-04-28T13:42:00.616Z"
+                },
+                ...
+            ],
+            "error": null
+        }
