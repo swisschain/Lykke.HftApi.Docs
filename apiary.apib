@@ -455,8 +455,7 @@ API to get active/closed orders.
     + volume: `0.45` (number) - Ordered volume in base asset.
     + filledVolume: `0.40` (number) - Filled volume in base asset.
     + remainingVolume: `0.05` (number) - Remaining volume to fill.
-    + cost: `3612.58` (number) - Order cost. `filledVolume` * `price`
-    + trades (array[Trade]) - List of order trades.
+    + cost: `3612.58` (number) - Order cost. `filledVolume` * `price`.
 
 
 ### /api/orders/active [GET/api/orders/active{?assetPairId,withTrades,offset,take}]
@@ -596,7 +595,6 @@ Get order trades
             "payload": [
                 {
                     "id": "2b18b8b7-1b11-4dd0-bc62-6af70d74634a",
-                    "index": 0,
                     "timestamp": "2020-04-28T13:42:00.616Z",
                     "assetPairId": "BTCUSD",
                     "orderId": "57ccfcf0-7d86-47bc-aa76-2717751649d9",
@@ -638,7 +636,6 @@ Get trades
             "payload": [
                 {
                     "id": "2b18b8b7-1b11-4dd0-bc62-6af70d74634a",
-                    "index": 0,
                     "timestamp": "2020-04-28T13:42:00.616Z",
                     "assetPairId": "BTCUSD",
                     "orderId": "57ccfcf0-7d86-47bc-aa76-2717751649d9",
